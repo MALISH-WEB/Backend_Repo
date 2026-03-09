@@ -1,0 +1,90 @@
+.notif-page { min-height: calc(100vh - 60px); background: #F9FAFB; padding: 2.5rem 1rem; }
+.notif-container { max-width: 700px; margin: 0 auto; }
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.notif-header h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.unread-badge {
+  background: #EEF2FF;
+  color: #4338CA;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+
+.btn-mark-all {
+  background: #4F46E5;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-mark-all:hover { background: #4338CA; }
+
+.notif-loading, .notif-empty { text-align: center; padding: 4rem 1rem; color: #9CA3AF; }
+.notif-empty span { font-size: 2.5rem; display: block; margin-bottom: 0.6rem; }
+.notif-empty p { margin: 0; font-size: 1rem; }
+
+.notif-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.notif-item {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  padding: 1rem 1.1rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: box-shadow 0.15s;
+}
+
+.notif-item.unread {
+  border-left: 4px solid #4F46E5;
+  background: #FAFBFF;
+}
+
+.notif-item:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+
+.notif-content { flex: 1; }
+.notif-message { color: #111827; font-size: 0.93rem; margin: 0 0 0.3rem; line-height: 1.5; }
+.notif-time { color: #9CA3AF; font-size: 0.78rem; }
+
+.btn-mark-read {
+  background: #EEF2FF;
+  color: #4338CA;
+  border: none;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.btn-mark-read:hover { background: #C7D2FE; }
