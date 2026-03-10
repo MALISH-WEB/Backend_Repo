@@ -4,43 +4,45 @@ const { authRequired } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// GET /notifications/:userId
-router.get("/:userId", authRequired, async (req, res) => {
-  const { userId } = req.params;
-  if (req.user.id !== Number(userId) && req.user.role !== "admin") {
-    return res.status(403).json({ message: "Not allowed" });
+// GET /notifications
+router.get("/", authRequired, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM notifications WHERE user_id=? ORDER BY created_at DESC LIMIT 50",
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch notifications" });
   }
-
-  const [rows] = await pool.query(
-    `
-    SELECT * FROM notifications
-    WHERE user_id = ?
-    ORDER BY created_at DESC
-    `,
-    [userId]
-  );
-  res.json(rows);
 });
 
 // PUT /notifications/read/:id
 router.put("/read/:id", authRequired, async (req, res) => {
-  const notifId = req.params.id;
-
-  const [rows] = await pool.query(
-    "SELECT * FROM notifications WHERE id = ?",
-    [notifId]
-  );
-  if (rows.length === 0) return res.status(404).json({ message: "Not found" });
-
-  const notif = rows[0];
-  if (notif.user_id !== req.user.id && req.user.role !== "admin") {
-    return res.status(403).json({ message: "Not allowed" });
+  try {
+    const [rows] = await pool.query("SELECT * FROM notifications WHERE id=?", [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ message: "Not found" });
+    if (rows[0].user_id !== req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+    await pool.query("UPDATE notifications SET is_read=TRUE WHERE id=?", [req.params.id]);
+    res.json({ message: "Marked as read" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update notification" });
   }
+});
 
-  await pool.query("UPDATE notifications SET status = 'read' WHERE id = ?", [
-    notifId,
-  ]);
-  res.json({ message: "Marked as read" });
+// PUT /notifications/read-all
+router.put("/read-all", authRequired, async (req, res) => {
+  try {
+    await pool.query("UPDATE notifications SET is_read=TRUE WHERE user_id=?", [req.user.id]);
+    res.json({ message: "All marked as read" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update notifications" });
+  }
 });
 
 module.exports = router;

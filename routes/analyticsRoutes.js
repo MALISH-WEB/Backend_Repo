@@ -4,71 +4,121 @@ const { authRequired, adminOnly } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// GET /analytics/dashboard  – admin overview
 router.get("/dashboard", authRequired, adminOnly, async (req, res) => {
   try {
-    // counts
-    const [[countsRow]] = await pool.query(`
+    const [[counts]] = await pool.query(`
       SELECT
-        (SELECT COUNT(*) FROM projects) AS total,
-        (SELECT COUNT(*) FROM projects WHERE status = 'approved') AS approved,
-        (SELECT COUNT(*) FROM projects WHERE status = 'pending') AS pending,
-        (SELECT COUNT(*) FROM projects WHERE status = 'rejected') AS rejected
+        (SELECT COUNT(*) FROM users WHERE role='influencer') AS influencers,
+        (SELECT COUNT(*) FROM users WHERE role='business') AS businesses,
+        (SELECT COUNT(*) FROM tasks) AS total_tasks,
+        (SELECT COUNT(*) FROM tasks WHERE status='completed') AS completed_tasks,
+        (SELECT COALESCE(SUM(commission),0) FROM payments WHERE status='completed') AS total_commission,
+        (SELECT COALESCE(SUM(net_amount),0) FROM payments WHERE status='completed') AS total_paid_out,
+        (SELECT COUNT(*) FROM subscriptions WHERE status='active') AS active_subscriptions
     `);
 
-    const counts = {
-      total: Number(countsRow.total || 0),
-      approved: Number(countsRow.approved || 0),
-      pending: Number(countsRow.pending || 0),
-      rejected: Number(countsRow.rejected || 0),
-    };
+    const [tasksByStatus] = await pool.query(
+      `SELECT status AS label, COUNT(*) AS value FROM tasks GROUP BY status ORDER BY value DESC`
+    );
 
-    // per category
-    const [perCategoryRows] = await pool.query(`
-      SELECT COALESCE(category, 'Unspecified') AS label, COUNT(*) AS value
-      FROM projects
-      GROUP BY label
-      ORDER BY value DESC
-    `);
-    const perCategory = perCategoryRows.map(r => ({ label: r.label, value: Number(r.value) }));
+    const [monthly] = await pool.query(
+      `SELECT DATE_FORMAT(created_at,'%Y-%m') AS month, COUNT(*) AS tasks
+       FROM tasks GROUP BY month ORDER BY month ASC`
+    );
 
-    // per faculty
-    const [perFacultyRows] = await pool.query(`
-      SELECT COALESCE(faculty, 'Unspecified') AS label, COUNT(*) AS value
-      FROM projects
-      GROUP BY label
-      ORDER BY value DESC
-    `);
-    const perFaculty = perFacultyRows.map(r => ({ label: r.label, value: Number(r.value) }));
+    const [topInfluencers] = await pool.query(
+      `SELECT u.name, COUNT(ts.id) AS completed_tasks,
+         COALESCE(SUM(p.net_amount),0) AS earnings
+       FROM users u
+       LEFT JOIN task_submissions ts ON ts.influencer_id=u.id AND ts.status='approved'
+       LEFT JOIN payments p ON p.influencer_id=u.id AND p.status='completed'
+       WHERE u.role='influencer'
+       GROUP BY u.id ORDER BY completed_tasks DESC LIMIT 10`
+    );
 
-    // monthly trend
-    const [monthlyRows] = await pool.query(`
-      SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS value
-      FROM projects
-      GROUP BY month
-      ORDER BY month ASC
-    `);
-    const monthly = monthlyRows.map(r => ({ month: r.month, value: Number(r.value) }));
-
-    // top creators
-    const [topCreatorsRows] = await pool.query(`
-      SELECT u.name AS label, COUNT(p.id) AS value
-      FROM users u
-      LEFT JOIN projects p ON p.user_id = u.id
-      GROUP BY u.id
-      ORDER BY value DESC
-      LIMIT 10
-    `);
-    const topCreators = topCreatorsRows.map(r => ({ label: r.label, value: Number(r.value) }));
-
-    const payload = { counts, perCategory, perFaculty, monthly, topCreators };
-
-    console.log("[analytics] payload ready");
-    res.json(payload);
+    res.json({
+      counts,
+      tasksByStatus: tasksByStatus.map(r => ({ label: r.label, value: Number(r.value) })),
+      monthly,
+      topInfluencers,
+    });
   } catch (err) {
-    console.error("[analytics] error:", err);
+    console.error(err);
+    res.status(500).json({ message: "Analytics failed" });
+  }
+});
+
+// GET /analytics/business  – business campaign analytics
+router.get("/business", authRequired, async (req, res) => {
+  try {
+    if (req.user.role !== "business" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Businesses only" });
+    }
+    const bId = req.user.role === "admin" ? (req.query.business_id || req.user.id) : req.user.id;
+
+    const [[stats]] = await pool.query(
+      `SELECT
+         COUNT(t.id) AS total_tasks,
+         COUNT(CASE WHEN t.status='completed' THEN 1 END) AS completed,
+         COUNT(CASE WHEN t.status='open' THEN 1 END) AS open,
+         COALESCE(SUM(p.gross_amount),0) AS total_spend,
+         COALESCE(SUM(p.commission),0) AS commission_paid,
+         COALESCE(AVG(p.gross_amount),0) AS avg_cost_per_task
+       FROM tasks t
+       LEFT JOIN payments p ON p.task_id = t.id AND p.status='completed'
+       WHERE t.business_id=?`,
+      [bId]
+    );
+
+    const [taskTrend] = await pool.query(
+      `SELECT DATE_FORMAT(created_at,'%Y-%m') AS month, COUNT(*) AS tasks
+       FROM tasks WHERE business_id=? GROUP BY month ORDER BY month ASC`,
+      [bId]
+    );
+
+    res.json({ stats, taskTrend });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Analytics failed" });
+  }
+});
+
+// GET /analytics/influencer  – influencer earnings analytics
+router.get("/influencer", authRequired, async (req, res) => {
+  try {
+    if (req.user.role !== "influencer" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Influencers only" });
+    }
+    const iId = req.user.role === "admin" ? (req.query.influencer_id || req.user.id) : req.user.id;
+
+    const [[stats]] = await pool.query(
+      `SELECT
+         COUNT(DISTINCT ta.task_id) AS applied_tasks,
+         COUNT(CASE WHEN ta.status='accepted' THEN 1 END) AS accepted_tasks,
+         COUNT(CASE WHEN ts.status='approved' THEN 1 END) AS completed_tasks,
+         COALESCE(SUM(p.net_amount),0) AS total_earnings
+       FROM task_applications ta
+       LEFT JOIN task_submissions ts ON ts.task_id=ta.task_id AND ts.influencer_id=ta.influencer_id
+       LEFT JOIN payments p ON p.task_id=ta.task_id AND p.influencer_id=ta.influencer_id AND p.status='completed'
+       WHERE ta.influencer_id=?`,
+      [iId]
+    );
+
+    const [earningsTrend] = await pool.query(
+      `SELECT DATE_FORMAT(p.created_at,'%Y-%m') AS month, SUM(p.net_amount) AS earnings
+       FROM payments p WHERE p.influencer_id=? AND p.status='completed'
+       GROUP BY month ORDER BY month ASC`,
+      [iId]
+    );
+
+    const [[wallet]] = await pool.query("SELECT balance FROM wallets WHERE user_id=?", [iId]);
+
+    res.json({ stats, earningsTrend, wallet_balance: wallet?.balance || 0 });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Analytics failed" });
   }
 });
 
 module.exports = router;
-

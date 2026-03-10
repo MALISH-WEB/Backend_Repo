@@ -1,19 +1,19 @@
 .auth-page {
-  min-height: calc(100vh - 60px);
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--gradient-soft);
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, #EEF2FF 0%, #F3F4F6 100%);
 }
 
 .auth-card {
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 30px rgba(79, 70, 229, 0.1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   padding: 2.5rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
 }
 
 .auth-header {
@@ -22,115 +22,78 @@
 }
 
 .auth-logo {
-  font-size: 2.5rem;
+  font-size: 3rem;
   display: block;
   margin-bottom: 0.75rem;
 }
 
+.auth-brand {
+  font-size: 1.75rem;
+  font-weight: 800;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .auth-header h1 {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #111827;
-  margin: 0 0 0.3rem;
+  color: var(--gray-900);
+  margin-top: 0.5rem;
 }
 
 .auth-header p {
-  color: #6B7280;
-  margin: 0;
-  font-size: 0.95rem;
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.form-group label {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  border: 1.5px solid #D1D5DB;
-  border-radius: 8px;
-  padding: 0.6rem 0.85rem;
-  font-size: 0.95rem;
-  color: #111827;
-  background: #fff;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  font-family: inherit;
-  outline: none;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  border-color: #4F46E5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
-}
-
-.form-group textarea {
-  resize: vertical;
-  min-height: 90px;
-}
-
-.btn-auth {
-  background: #4F46E5;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 0.7rem 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  color: var(--gray-500);
+  font-size: 0.9rem;
   margin-top: 0.25rem;
 }
 
-.btn-auth:hover { background: #4338CA; }
-.btn-auth:disabled { opacity: 0.65; cursor: not-allowed; }
+.role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.role-option {
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 1rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  background: #fff;
+}
+
+.role-option:hover { border-color: var(--blue); }
+.role-option.selected { border-color: var(--blue); background: #EFF6FF; }
+.role-option-icon { font-size: 2rem; display: block; margin-bottom: 0.4rem; }
+.role-option-label { font-size: 0.8rem; font-weight: 600; color: var(--gray-700); }
+.role-option.selected .role-option-label { color: var(--blue); }
+
+.auth-form .btn-auth {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--gradient);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin-top: 0.5rem;
+}
+
+.auth-form .btn-auth:hover { opacity: 0.9; }
+.auth-form .btn-auth:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .auth-footer {
   text-align: center;
+  color: var(--gray-500);
+  font-size: 0.875rem;
   margin-top: 1.5rem;
-  font-size: 0.9rem;
-  color: #6B7280;
 }
 
-.auth-footer a {
-  color: #4F46E5;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.auth-footer a:hover { text-decoration: underline; }
-
-.alert {
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.alert-error {
-  background: #FEF2F2;
-  color: #B91C1C;
-  border: 1px solid #FECACA;
-}
-
-.alert-success {
-  background: #F0FDF4;
-  color: #15803D;
-  border: 1px solid #BBF7D0;
-}
+.auth-footer a { color: var(--blue); font-weight: 600; }
