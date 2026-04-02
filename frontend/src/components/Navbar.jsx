@@ -40,11 +40,13 @@ export default function Navbar() {
 
         <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
           <Link to="/projects" className="nav-link" onClick={() => setMenuOpen(false)}>Projects</Link>
+          <Link to="/labs" className="nav-link" onClick={() => setMenuOpen(false)}>🔬 Labs</Link>
 
           {user && (
             <>
               <Link to="/projects/new" className="nav-link" onClick={() => setMenuOpen(false)}>+ Submit</Link>
               <Link to={`/profile/${user.id}`} className="nav-link" onClick={() => setMenuOpen(false)}>Profile</Link>
+              <Link to={`/labs/progress/${user.id}`} className="nav-link" onClick={() => setMenuOpen(false)}>My Progress</Link>
             </>
           )}
 

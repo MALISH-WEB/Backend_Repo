@@ -14,6 +14,10 @@ import NotificationsPage from './pages/NotificationsPage';
 import AdminApprovalsPage from './pages/AdminApprovalsPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminAnalyticsPage from './pages/AdminAnalyticsPage';
+import LabListPage from './pages/LabListPage';
+import LabPage from './pages/LabPage';
+import TeacherLabPage from './pages/TeacherLabPage';
+import StudentProgressPage from './pages/StudentProgressPage';
 
 export default function App() {
   return (
@@ -43,6 +47,16 @@ export default function App() {
           } />
           <Route path="/admin/analytics" element={
             <AdminRoute><AdminAnalyticsPage /></AdminRoute>
+          } />
+          <Route path="/labs" element={<LabListPage />} />
+          <Route path="/labs/teacher" element={
+            <ProtectedRoute><TeacherLabPage /></ProtectedRoute>
+          } />
+          <Route path="/labs/progress/:studentId" element={
+            <ProtectedRoute><StudentProgressPage /></ProtectedRoute>
+          } />
+          <Route path="/labs/:id" element={
+            <ProtectedRoute><LabPage /></ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/projects" replace />} />
         </Routes>
