@@ -11,6 +11,7 @@ const userRoutes = require("./routes/UserRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const metaRoutes = require("./routes/metaRoutes");
+const labRoutes = require("./routes/labRoutes");
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api", metaRoutes);
+app.use("/api/labs", labRoutes);
 
 // SERVER START
 const PORT = process.env.PORT || 5000;
